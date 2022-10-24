@@ -1,44 +1,45 @@
 import requests
 from bs4 import BeautifulSoup
 import lxml
+from art import tprint
 
 
-class CurrencyNameError(Exception):
-    pass
-
-
-class Conversion:
+def conversion(start_currency: str,
+               quantity_currency: int,
+               end_currency: str) -> float:
     """
-    parser currency converter in site https://minfin.com.ua
+    input:(str(start_currency), int(quantity), str(end_currency))
+    output:final quantity
         """
 
-    def __init__(self):
-        pass
+    try:
+        start_currency = start_currency.lower()
+        end_currency = end_currency.lower()
 
-    def conversion(self, start_currency: str,
-                   quantity_currency: int,
-                   end_currency: str) -> float:
-        """
-        input:(str(start_currency), int(quantity), str(end_currency))
-        output:final quantity
-            """
+        url = f'https://minfin.com.ua/ua/currency/converter/' \
+              f'{quantity_currency}-{start_currency}-to-{end_currency}/' \
+              f'?converter-type=auction'
 
-        try:
-            start_currency = start_currency.lower()
-            end_currency = end_currency.lower()
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'lxml')
+        result = soup.find_all('input', class_='sc-1xh0v1v-1 jwqFnq')
 
-            url = f'https://minfin.com.ua/ua/currency/converter/' \
-                  f'{quantity_currency}-{start_currency}-to-{end_currency}/' \
-                  f'?converter-type=auction'
+        return result[1].get('value')
 
-            response = requests.get(url)
-            soup = BeautifulSoup(response.text, 'lxml')
-            result = soup.find_all('input', class_='sc-1xh0v1v-1 jwqFnq')
+    except AttributeError:
+        raise TypeError('Wrong data types in passed arguments')
 
-            return result[1].get('value')
+    except IndexError:
+        raise CurrencyNameError('Wrong currency code')
 
-        except AttributeError:
-            raise TypeError('Wrong data types in passed arguments')
 
-        except IndexError:
-            raise CurrencyNameError('Wrong currency name')
+def main():
+    tprint('currency converter')
+    start_currency = input('start_currency[code: str]:')
+    end_currency = input('end_currency[code: str]:')
+    quantity_currency = input('quantity_currency[count: int]')
+    print(conversion(start_currency, quantity_currency, end_currency))
+
+
+if __name__ == '__main__':
+    main()
